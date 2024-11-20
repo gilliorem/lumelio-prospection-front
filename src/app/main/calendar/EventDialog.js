@@ -37,6 +37,7 @@ const defaultValues = {
   allDay: false,
   start: formatISO(new Date()),
   end: formatISO(new Date()),
+  duration: 2
 };
 
 // test creneau jour
@@ -95,7 +96,10 @@ function EventDialog(props) {
       yup.number().required("Veuillez entrer le montant de la vente"),
   });
 
-  const { reset, formState, watch, control, getValues } = useForm({
+
+  //setValue
+
+  const { reset, formState, watch, control, getValues, setValue } = useForm({
     defaultValues,
     mode: "onChange",
     resolver: yupResolver(schema),
@@ -155,6 +159,11 @@ function EventDialog(props) {
   function onSubmit(ev) {
     ev.preventDefault();
     const data = getValues();
+    // --remi 20/11 introducing duration --
+    const duration = data.duration;
+
+    // --
+
     if (selectedEvent) {
       if (nextAction === 2) {
         dispatch(
@@ -166,6 +175,7 @@ function EventDialog(props) {
             sale: 0,
             observations: data.observations,
             date: data.date,
+            duration: duration,
           })
         );
       } else if (nextAction === 3) {
@@ -202,6 +212,8 @@ function EventDialog(props) {
             addressId: selectedEvent.addressId,
             observations: data.observations,
             date: data.date,
+            //--duration
+            duration: duration,
           })
         );
       }
@@ -432,26 +444,30 @@ function EventDialog(props) {
             //
             
             <Controller
-              name="end"
+            // set duration instead of end
+              name="duration"
               control={control}
-              defaultValue=""
-              render={({ field: { onChange, value } }) => (
-                <DateTimePicker
-                  label="Choisir une date de fin"
-                  ampm={false}
-                  ampmInClock={false}
-                  value={value}
-                  onChange={onChange}
-                  renderInput={(_props) => (
-                    <TextField
-                      label="End"
-                      className="mt-8 mb-16 w-full"
-                      {..._props}
-                    />
-                  )}
-                  className="mt-8 mb-16 w-full"
+              defaultValue={2} // Default duration in hours
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  type="number"
+                  label="Durée (heures)"
+                  variant="outlined"
+                  fullWidth
+                  onChange={(e) => {
+                    const newDuration = parseInt(e.target.value, 10);
+                    field.onChange(newDuration);
+                    if (start)
+                    {
+                      const newEnd = new Date(start);
+                      newEnd.setHours(newEnd.getHours() + newDuration);
+                      setValue("end", newEnd);
+                    }
+                  }}
                 />
               )}
+              //---//
             />
 
             //

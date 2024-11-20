@@ -192,7 +192,11 @@ const eventsSlice = createSlice({
           },
           data: {
             ...event,
-            start: formatISO(event.start),
+            //--
+            start: formatISO(start), // erase "event."
+            end: formatISO(end),
+            duration,
+            //--
           },
         };
         return { payload };
