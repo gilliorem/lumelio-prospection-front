@@ -45,10 +45,23 @@ export const getEvents = createAsyncThunk(
 );
 
 export const addEvent = createAsyncThunk(
-  "calendarApp/addEvent",
-  async ({ commercial, prospector, ...newEvent }, { dispatch }) => {
+  "calendarApp/addEvent", // --duration event--
+  async ({ commercial, prospector, duration, ...newEvent }, { dispatch }) => {
+
+    // --calculate end time if duration provided--
+    const start = new Date(newEvent.start);
+    const end = duration
+      ? new Date(start.getTime() + duration * 60 * 60 * 1000)
+      : newEvent.end;
+    // ----
+
     const response = await axios.post("/events", {
       ...newEvent,
+      //--
+      start: start.formatISO(),
+      end: end.formatISO(),
+      duration,
+      //--
     });
     const data = await response.data;
     dispatch(getEvents());
@@ -143,6 +156,11 @@ const eventsSlice = createSlice({
   reducers: {
     openNewEventDialog: {
       prepare: (event) => {
+        // --event duration--
+        const duration = 2;
+        const start = new Date(event.start);
+        const end = new Date(start.getTime() + duration * 60 * 60 * 1000) 
+        // ----
         const payload = {
           type: "new",
           props: {
@@ -151,6 +169,7 @@ const eventsSlice = createSlice({
           data: {
             start: formatISO(event.start),
             end: formatISO(event.end),
+            duration,
           },
         };
         return { payload };
@@ -161,6 +180,11 @@ const eventsSlice = createSlice({
     },
     openEditEventDialog: {
       prepare: (event) => {
+        // --event duration--
+        const start = new Date(event.start);
+        const end = new Date(event.end);
+        const duration = (end - start) / (60 * 60 * 1000);
+        // ----
         const payload = {
           type: "edit",
           props: {
